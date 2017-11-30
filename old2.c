@@ -6,7 +6,7 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 17:40:51 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/11/30 17:04:33 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/11/30 14:39:02 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,35 +52,18 @@ t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int len, int i)
 				return (NULL);
 			found = 1;
 		}
-		if (!found)
+		while (new_gnl->next)
 		{
-			if (!gnl->next)
+			new_gnl = new_gnl->next;
+			if (new_gnl->fd == fd)
 			{
-				gnl = gnl->next;
-				if ((new_gnl = (t_gnl*)malloc(sizeof(t_gnl))) == NULL)
+				if (!(new_gnl->str = alloc_str(new_gnl->str, &len, &i)))
 					return (NULL);
-				new_gnl->fd = fd;
-				if ((new_gnl->str = alloc_str(NULL, &len, &i)) == NULL)
-					return (NULL);
-				new_gnl->next = NULL;
-				gnl = new_gnl;
-			}
-			else
-			{
-				while (!found && new_gnl->next)
-				{
-					new_gnl = new_gnl->next;
-					if (new_gnl->fd == fd)
-					{
-						if (!(new_gnl->str = alloc_str(new_gnl->str, &len, &i)))
-							return (NULL);
-						found = 1;
-					}
-				}
+				found = 1;
 			}
 		}
 	}
-	else
+	if (!found)
 	{
 		if ((new_gnl = (t_gnl*)malloc(sizeof(t_gnl))) == NULL)
 			return (NULL);
