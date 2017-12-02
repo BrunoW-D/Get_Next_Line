@@ -6,7 +6,7 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 11:25:17 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/11/29 17:00:27 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/02 13:21:53 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@ typedef struct		s_gnl
 	struct s_gnl	*next;
 }					t_gnl;
 
-int		get_next_line(const int fd, char **line);
-char	*ft_strdup(const char *src);
-size_t	ft_strlen(const char *str);
-char	*ft_strcpy(char *dest, const char *src);
-char	*ft_strnew(size_t size);
+int					get_next_line(const int fd, char **line);
+char				*ft_strdup(const char *src);
+size_t				ft_strlen(const char *str);
+char				*ft_strcpy(char *dest, const char *src);
+char				*ft_strnew(size_t size);
 #endif

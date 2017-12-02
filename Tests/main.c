@@ -6,7 +6,7 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/27 16:53:07 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/11/30 15:29:30 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/02 12:55:39 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ int		main(void)
 	line[1] = NULL;
 	i = 0;
 	fd = open("../Tests/test3", O_RDONLY);
-	fd2 = open("../Tests/test2", O_RDONLY);
+	fd2 = open("../Tests/test4", O_RDONLY);
 	if (fd == -1)
 		return (0);
 	while (i < 6)
