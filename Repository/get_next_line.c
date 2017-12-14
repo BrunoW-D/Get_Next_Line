@@ -6,11 +6,12 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 17:40:51 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/02 16:59:46 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/14 17:43:54 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include <stdio.h>
 
 char	*alloc_str(char *str, int *len, int *i)
 {
@@ -34,28 +35,13 @@ char	*alloc_str(char *str, int *len, int *i)
 	return (str);
 }
 
-t_gnl	*make_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
-{
-	t_gnl	*new_gnl;
-
-	if (!((new_gnl = (t_gnl*)malloc(sizeof(t_gnl)))
-				&& (new_gnl->str = alloc_str(NULL, len, i))))
-		return (NULL);
-	new_gnl->fd = fd;
-	new_gnl->next = NULL;
-	if (*first_gnl)
-		first_gnl[0]->next = new_gnl;
-	else
-		*first_gnl = new_gnl;
-	return (new_gnl);
-}
-
 t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
 {
 	t_gnl	*new_gnl;
+	t_gnl	*previous;
 
 	new_gnl = *first_gnl;
-	if (*first_gnl)
+	while (new_gnl)
 	{
 		if (new_gnl->fd == fd)
 		{
@@ -63,46 +49,41 @@ t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
 				return (NULL);
 			return (new_gnl);
 		}
-		while (new_gnl->next)
-		{
-			new_gnl = new_gnl->next;
-			if (new_gnl->fd == fd)
-			{
-				if (!(new_gnl->str = alloc_str(new_gnl->str, len, i)))
-					return (NULL);
-				return (new_gnl);
-			}
-		}
+		previous = new_gnl;
 		new_gnl = new_gnl->next;
 	}
-	return ((new_gnl = make_gnl(first_gnl, fd, len, i)));
+	if (!((new_gnl = (t_gnl*)malloc(sizeof(t_gnl)))
+			&& (new_gnl->str = alloc_str(NULL, len, i))))
+		return (NULL);
+	new_gnl->fd = fd;
+	new_gnl->next = NULL;
+	if (!*first_gnl)
+		*first_gnl = new_gnl;
+	else if (previous)
+		previous->next = new_gnl;
+	return (new_gnl);
 }
 
-int		end_line(t_gnl **gnlptr, char **line)
+int		end_line(t_gnl **gnlptr, char **line, int ret)
 {
 	int		i;
 	char	*str;
-	t_gnl	*gnl;
 
 	i = 0;
-	gnl = *gnlptr;
-	str = gnl->str;
-	if (!str[0])
-	{
-		*line = NULL;
-		return (0);
-	}
+	str = (*gnlptr)->str;
 	while (str[i])
 	{
 		if (str[i] == '\n')
 		{
 			str[i] = '\0';
 			*line = ft_strdup(str);
-			gnl->str = str + i + 1;
+			(*gnlptr)->str = str + i + 1;
 			return (1);
 		}
 		i++;
 	}
+	if (ret == 0 && i == 0)
+		return (0);
 	*line = ft_strdup(str);
 	return (2);
 }
@@ -124,14 +105,14 @@ int		get_next_line(const int fd, char **line)
 	{
 		if (ret == -1)
 			return (-1);
-		if ((ret = end_line(&gnl, line)) == 1)
+		if ((ret = end_line(&gnl, line, ret)) == 1)
 			return (1);
-		else if (ret == 2
-				&& ((gnl->str = alloc_str(gnl->str, &len, &i)) == NULL))
+		if (ret == 2 && ((gnl->str = alloc_str(gnl->str, &len, &i)) == NULL))
 			return (-1);
 	}
-	ret = end_line(&gnl, line);
-	if (ret == 2)
-		gnl->str[0] = '\0';
+	if ((ret = end_line(&gnl, line, ret)) == 2)
+		gnl->str = NULL;
+	else if (ret == 0)
+		free(gnl->str); //ft_strdel(gnl->str)
 	return (ret ? 1 : 0);
 }
