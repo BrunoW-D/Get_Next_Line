@@ -6,13 +6,13 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 17:40:51 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/15 18:24:05 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/15 18:39:27 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char	*alloc_str(char *str, int *len, int *i)
+char	*alloc_str(char *str, t_data *data)
 {
 	char	*str_tmp;
 
@@ -20,21 +20,21 @@ char	*alloc_str(char *str, int *len, int *i)
 	if (str != NULL)
 	{
 		str_tmp = ft_strdup(str);
-		*i = ft_strlen(str);
-		*len += *i;
+		data->i = ft_strlen(str);
+		data->len += data->i;
 	}
-	if ((str = ft_strnew(*len)) == NULL)
+	if ((str = ft_strnew(data->len)) == NULL)
 		return (NULL);
 	if (str_tmp)
 	{
 		str = ft_strcpy(str, str_tmp);
 		free(str_tmp);
 	}
-	str[*len - 1] = '\0';
+	str[data->len - 1] = '\0';
 	return (str);
 }
 
-t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
+t_gnl	*add_gnl(t_gnl **first_gnl, int fd, t_data *data)
 {
 	t_gnl	*new_gnl;
 	t_gnl	*previous;
@@ -44,7 +44,7 @@ t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
 	{
 		if (new_gnl->fd == fd)
 		{
-			if (!(new_gnl->str = alloc_str(new_gnl->str, len, i)))
+			if (!(new_gnl->str = alloc_str(new_gnl->str, data)))
 				return (NULL);
 			return (new_gnl);
 		}
@@ -52,7 +52,7 @@ t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
 		new_gnl = new_gnl->next;
 	}
 	if (!((new_gnl = (t_gnl*)malloc(sizeof(t_gnl)))
-			&& (new_gnl->str = alloc_str(NULL, len, i))))
+			&& (new_gnl->str = alloc_str(NULL, data))))
 		return (NULL);
 	new_gnl->fd = fd;
 	new_gnl->next = NULL;
@@ -87,7 +87,7 @@ void	set_free(t_gnl **first_gnl, int fd)
 	}
 }
 
-int		end_line(t_gnl **gnlptr, char **line, int ret)
+int		end_line(t_gnl **gnlptr, char **line, t_data *data)
 {
 	int		i;
 	char	*str;
@@ -105,7 +105,7 @@ int		end_line(t_gnl **gnlptr, char **line, int ret)
 		}
 		i++;
 	}
-	if (ret == 0 && i == 0)
+	if (data->ret == 0 && i == 0)
 		return (0);
 	*line = ft_strdup(str);
 	return (2);
@@ -114,28 +114,27 @@ int		end_line(t_gnl **gnlptr, char **line, int ret)
 int		get_next_line(const int fd, char **line)
 {
 	static t_gnl	*first_gnl = NULL;
-	int				len;
-	int				i;
-	int				ret;
 	t_gnl			*gnl;
+	t_data			*data;
 
-	len = BUFF_SIZE;
-	i = 0;
-	ret = 0;
-	if (fd < 0 || (gnl = add_gnl(&first_gnl, fd, &len, &i)) == NULL)
+	if ((data = (t_data*)malloc(sizeof(t_data))) == NULL)
 		return (-1);
-	while ((ret = read(fd, gnl->str + i, BUFF_SIZE)))
+	data->len = BUFF_SIZE;
+	if (fd < 0 || (gnl = add_gnl(&first_gnl, fd, data)) == NULL)
+		return (-1);
+	while ((data->ret = read(fd, gnl->str + data->i, BUFF_SIZE)))
 	{
-		if (ret == -1)
+		if (data->ret == -1)
 			return (-1);
-		if ((ret = end_line(&gnl, line, ret)) == 1)
+		if ((data->end = end_line(&gnl, line, data)) == 1)
 			return (1);
-		if (ret == 2 && ((gnl->str = alloc_str(gnl->str, &len, &i)) == NULL))
+		if (data->end == 2
+				&& ((gnl->str = alloc_str(gnl->str, data)) == NULL))
 			return (-1);
 	}
-	if ((ret = end_line(&gnl, line, ret)) == 2)
+	if ((data->end = end_line(&gnl, line, data)) == 2)
 		gnl->str = NULL;
-	else if (ret == 0)
+	else if (data->end == 0)
 		set_free(&first_gnl, fd);
-	return (ret ? 1 : 0);
+	return (data->end ? 1 : 0);
 }

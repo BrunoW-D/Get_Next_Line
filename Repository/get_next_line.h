@@ -6,7 +6,7 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 11:25:17 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/15 17:55:19 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/15 18:27:39 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,14 @@ typedef struct		s_gnl
 	char			*str;
 	struct s_gnl	*next;
 }					t_gnl;
+
+typedef struct		s_data
+{
+	int				i;
+	int				len;
+	int				ret;
+	int				end;
+}					t_data;
 
 int					get_next_line(const int fd, char **line);
 char				*ft_strdup(const char *src);
