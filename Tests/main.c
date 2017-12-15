@@ -6,7 +6,7 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/27 16:53:07 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/14 16:37:45 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/15 13:35:16 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,12 +35,14 @@ int		main(void)
 		return (0);
 	while (i < 5)
 	{
-		//get_next_line(fd, line);
 		printf("fd1 - %d : %s\n", get_next_line(fd1, line), *line);
-		//puts(*line);
+		*line = NULL;
 		printf("fd2 - %d : %s\n", get_next_line(fd2, line), *line);
+		*line = NULL;
 		printf("fd3 - %d : %s\n", get_next_line(fd3, line), *line);
+		*line = NULL;
 		printf("fd4 - %d : %s\n", get_next_line(fd4, line), *line);
+		*line = NULL;
 		i++;
 	}
 	/*
