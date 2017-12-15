@@ -6,7 +6,7 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 17:40:51 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/15 13:37:08 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/15 18:24:05 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,17 +63,28 @@ t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
 	return (new_gnl);
 }
 
-void	set_free(t_gnl **gnlptr)
+void	set_free(t_gnl **first_gnl, int fd)
 {
 	t_gnl	*gnl;
+	t_gnl	*previous;
 
-	gnl = *gnlptr;
-	*gnlptr = gnl->next;
-	free(gnl->str);
-	gnl->str = NULL;
-	gnl->fd = -1;
-	//free(gnl);
-	//gnl = NULL;
+	gnl = *first_gnl;
+	previous = *first_gnl;
+	while (gnl)
+	{
+		if (gnl->fd == fd)
+		{
+			free(gnl->str);
+			gnl->str = NULL;
+			previous->next = gnl->next;
+			gnl->next = NULL;
+			free(gnl);
+			gnl = NULL;
+			return ;
+		}
+		previous = gnl;
+		gnl = gnl->next;
+	}
 }
 
 int		end_line(t_gnl **gnlptr, char **line, int ret)
@@ -125,6 +136,6 @@ int		get_next_line(const int fd, char **line)
 	if ((ret = end_line(&gnl, line, ret)) == 2)
 		gnl->str = NULL;
 	else if (ret == 0)
-		set_free(&gnl);
+		set_free(&first_gnl, fd);
 	return (ret ? 1 : 0);
 }
