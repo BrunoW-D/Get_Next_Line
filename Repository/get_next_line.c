@@ -6,12 +6,11 @@
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 17:40:51 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/14 17:43:54 by bwang-do         ###   ########.fr       */
+/*   Updated: 2017/12/15 13:37:08 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
 char	*alloc_str(char *str, int *len, int *i)
 {
@@ -64,6 +63,19 @@ t_gnl	*add_gnl(t_gnl **first_gnl, int fd, int *len, int *i)
 	return (new_gnl);
 }
 
+void	set_free(t_gnl **gnlptr)
+{
+	t_gnl	*gnl;
+
+	gnl = *gnlptr;
+	*gnlptr = gnl->next;
+	free(gnl->str);
+	gnl->str = NULL;
+	gnl->fd = -1;
+	//free(gnl);
+	//gnl = NULL;
+}
+
 int		end_line(t_gnl **gnlptr, char **line, int ret)
 {
 	int		i;
@@ -113,6 +125,6 @@ int		get_next_line(const int fd, char **line)
 	if ((ret = end_line(&gnl, line, ret)) == 2)
 		gnl->str = NULL;
 	else if (ret == 0)
-		free(gnl->str); //ft_strdel(gnl->str)
+		set_free(&gnl);
 	return (ret ? 1 : 0);
 }
