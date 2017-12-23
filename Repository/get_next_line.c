@@ -5,115 +5,79 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: bwang-do <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/11/25 17:40:51 by bwang-do          #+#    #+#             */
-/*   Updated: 2017/12/22 19:08:17 by bwang-do         ###   ########.fr       */
+/*   Created: 2017/12/23 12:15:48 by bwang-do          #+#    #+#             */
+/*   Updated: 2017/12/23 19:00:31 by bwang-do         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
-int		alloc_str(t_gnl **gnlptr, int re)
-{
-	char	*str_tmp;
-
-	str_tmp = NULL;
-	if (re == 1)
-	{
-		if ((str_tmp = ft_strdup((*gnlptr)->str)) == NULL)
-			return (0);
-		free((*gnlptr)->str);
-		(*gnlptr)->str = NULL;
-		(*gnlptr)->i = ft_strlen(str_tmp);
-		(*gnlptr)->len += (*gnlptr)->i;
-	}
-	if (((*gnlptr)->str = ft_strnew((*gnlptr)->len)) == NULL)
-		return (0);
-	if (str_tmp)
-	{
-		ft_strcpy((*gnlptr)->str, str_tmp);
-		free(str_tmp);
-		str_tmp = NULL;
-	}
-	(*gnlptr)->str[(*gnlptr)->len - 1] = '\0';
-	return (1);
-}
-
-t_gnl	*add_gnl(t_gnl **first_gnl, int fd)
+t_gnl	*new_gnl(int fd)
 {
 	t_gnl	*gnl;
-	t_gnl	*new_gnl;
+
+	if ((gnl = (t_gnl*)malloc(sizeof(t_gnl))) == NULL)
+		return (NULL);
+	gnl->fd = fd;
+	ft_bzero(gnl->buff, BUFF_SIZE + 1);
+	gnl->next = NULL;
+	return (gnl);
+}
+
+t_gnl	*get_gnl(t_gnl **first_gnl, int fd)
+{
+	t_gnl	*gnl;
 
 	gnl = *first_gnl;
 	while (gnl && gnl->next && gnl->fd != fd)
 		gnl = gnl->next;
 	if (gnl && gnl->fd == fd)
-	{
-		if (!(alloc_str(&gnl, 1)))
-			return (NULL);
 		return (gnl);
-	}
-	if ((new_gnl = (t_gnl*)malloc(sizeof(t_gnl))) == NULL)
-		return (NULL);
-	new_gnl->fd = fd;
-	new_gnl->len = BUFF_SIZE;
-	if (!(alloc_str(&new_gnl, 0)))
-		return (NULL);
-	new_gnl->next = NULL;
 	if (gnl && !gnl->next)
-		return ((gnl->next = new_gnl));
-	return ((*first_gnl = new_gnl));
+		return ((gnl->next = new_gnl(fd)));
+	return ((*first_gnl = new_gnl(fd)));
 }
 
-void	set_free(t_gnl **first_gnl, int fd)
+char	*ft_re_strnjoin(char *s1, char const *s2, size_t n)
 {
-	t_gnl	*gnl;
-	t_gnl	*previous;
+	char	*str_tmp;
+	size_t	i;
 
-	gnl = *first_gnl;
-	previous = *first_gnl;
-	while (gnl)
-	{
-		if (gnl->fd == fd)
-		{
-			free(gnl->str);
-			gnl->str = NULL;
-			previous->next = gnl->next;
-			gnl->next = NULL;
-			free(gnl);
-			gnl = NULL;
-			return ;
-		}
-		previous = gnl;
-		gnl = gnl->next;
-	}
+	if (!s1 || !s2)
+		return (NULL);
+	i = 0;
+	if ((str_tmp = ft_strdup(s1)) == NULL)
+		return (NULL);
+	free(s1);
+	s1 = NULL;
+	if ((s1 = ft_strnew(ft_strlen(str_tmp) + n)) == NULL)
+		return (NULL);
+	ft_strcpy(s1, str_tmp);
+	free(str_tmp);
+	str_tmp = NULL;
+	ft_strncat(s1, s2, n);
+	return (s1);
 }
 
-int		check_nl(t_gnl **gnlptr, char **line, int ret)
+int		check_nl(t_gnl *gnl, char **line, int len)
 {
 	int		i;
-	char	*str;
 
 	i = 0;
-	str = (*gnlptr)->str;
-	while (str[i])
+	while (i < len)
 	{
-		if (str[i] == '\n')
+		if (gnl->buff[i] == '\n')
 		{
-			str[i] = '\0';
-			*line = ft_strdup(str);
-			//free((*gnlptr)->str);
-			//(*gnlptr)->str = NULL;
-			//ft_strdup(str + i + 1);
-			ft_strncpy((*gnlptr)->str, str + i + 1, ft_strlen(str + i + 1));
+			if ((*line = ft_re_strnjoin(*line, gnl->buff, i)) == NULL)
+				return (-1);
+			ft_strncpy(gnl->buff, gnl->buff + i + 1, len - i);
 			return (1);
 		}
 		i++;
 	}
-	if (ret == 0 && str[0] == '\0')
-		return (0);
-	else if (ret == 0)
-		*line = ft_strdup(str);
+	if ((*line = ft_re_strnjoin(*line, gnl->buff, BUFF_SIZE)) == NULL)
+		return (-1);
+	ft_bzero(gnl->buff, BUFF_SIZE);
 	return (2);
 }
 
@@ -122,22 +86,20 @@ int		get_next_line(const int fd, char **line)
 	static t_gnl	*first_gnl;
 	t_gnl			*gnl;
 	int				ret;
+	int				nl;
 
-	if (fd < 0 || !line || BUFF_SIZE < 1
-			|| (gnl = add_gnl(&first_gnl, fd)) == NULL)
+	if (fd < 0 || !line || BUFF_SIZE < 1 || !(gnl = get_gnl(&first_gnl, fd)))
 		return (-1);
-	while ((ret = read(fd, gnl->str + gnl->i, BUFF_SIZE)))
+	if ((*line = ft_strnew(1)) == NULL)
+		return (-1);
+	if (gnl->buff[0] && (nl = check_nl(gnl, line, ft_strlen(gnl->buff))) != 2)
+		return (nl);
+	while ((ret = read(fd, gnl->buff, BUFF_SIZE)))
 	{
 		if (ret == -1)
 			return (-1);
-		if ((ret = check_nl(&gnl, line, ret)) == 1)
-			return (1);
-		if (ret == 2 && (!(alloc_str(&gnl, 1))))
-			return (-1);
+		if ((nl = check_nl(gnl, line, ret)) != 2)
+			return (nl);
 	}
-	if ((ret = check_nl(&gnl, line, ret)) == 2)
-		gnl->str[0] = '\0';
-	else if (ret == 0)
-		set_free(&first_gnl, fd);
-	return (ret ? 1 : 0);
+	return (**line ? 1 : 0);
 }
